@@ -1,20 +1,12 @@
 import pandas as pd
 import numpy as np
 import cv2
-from dataclasses import dataclass
 import json
 import os
 from abc import ABC, abstractmethod
 
+from dataset_prepare.utils import LANDMARKS_NUM, ImageShape, coordinates_to_image
 
-@dataclass
-class ImageShape:
-    x: int
-    y: int
-
-    def __iter__(self):
-        yield self.x
-        yield self.y
 
 GESTURES: list[str] = [
     'call',
@@ -32,25 +24,6 @@ GESTURES: list[str] = [
     'three2',
     'two_up'
 ]
-LANDMARKS_NUM = 21
-LANDMARKS_LINKS = {
-    0: [1, 5, 17],
-    1: [2],
-    2: [3],
-    3: [4],
-    5: [6, 9],
-    6: [7],
-    7: [8],
-    9: [10, 13],
-    10: [11],
-    11: [12],
-    13: [14, 17],
-    14: [15],
-    15: [16],
-    17: [18],
-    18: [19],
-    19: [20]
-}
 
 
 class Processor(ABC):
@@ -61,13 +34,6 @@ class Processor(ABC):
     @abstractmethod
     def process(self) -> None:
         pass
-
-    def _create_sample(self, x_norm: list[int], y_norm: list[int]) -> np.ndarray:
-        blank_img = np.zeros(tuple(self.output_shape), np.uint8)
-        for idx_from, target in LANDMARKS_LINKS.items():
-            for idx_to in target:
-                blank_img = cv2.line(blank_img, (x_norm[idx_from], y_norm[idx_from]), (x_norm[idx_to], y_norm[idx_to]), (255, 255, 255), 1)
-        return blank_img
 
     @abstractmethod
     def _normalize_landmarks(self, landmarks: list[list[float]]):
@@ -90,7 +56,7 @@ class OwnDatasetProcessor(Processor):
             for _, data in dataset.iterrows():
                 x_norm, y_norm = self._normalize_landmarks(data)
 
-                sample = self._create_sample(x_norm, y_norm)
+                sample = coordinates_to_image(self.output_shape, x_norm, y_norm)
                 id = int(data['id'])
                 cv2.imwrite(os.path.join(path, f'{id}.jpg'), sample)
     
@@ -123,7 +89,7 @@ class DownloadedDatasetProcessor(Processor):
                 if len(landmarks) != LANDMARKS_NUM:
                     continue
                 x_norm, y_norm = self._normalize_landmarks(landmarks)
-                sample = self._create_sample(x_norm, y_norm)
+                sample = coordinates_to_image(self.output_shape, x_norm, y_norm)
                 cv2.imwrite(os.path.join(path, f'{sample_id}.jpg'), sample)
     
     def _normalize_landmarks(self, landmarks: list[list[float]]):
@@ -144,4 +110,5 @@ if __name__=='__main__':
     DOWNLOADED_PATH = 'dataset/gotowy'
     OWN_PATH = 'dataset/moj'
 
-    DownloadedDatasetProcessor(output_shape, DOWNLOADED_PATH).process()
+    #DownloadedDatasetProcessor(output_shape, DOWNLOADED_PATH).process()
+    OwnDatasetProcessor(output_shape, OWN_PATH).process()

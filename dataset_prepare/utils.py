@@ -2,11 +2,52 @@ from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
 import numpy as np
 import cv2
+from dataclasses import dataclass
+
 
 MARGIN = 10  # pixels
 FONT_SIZE = 1
 FONT_THICKNESS = 1
 HANDEDNESS_TEXT_COLOR = (88, 205, 54) # vibrant green
+
+WHITE = (255, 255, 255)
+THICKNESS = 1
+LANDMARKS_NUM = 21
+LANDMARKS_LINKS = {
+    0: [1, 5, 17],
+    1: [2],
+    2: [3],
+    3: [4],
+    5: [6, 9],
+    6: [7],
+    7: [8],
+    9: [10, 13],
+    10: [11],
+    11: [12],
+    13: [14, 17],
+    14: [15],
+    15: [16],
+    17: [18],
+    18: [19],
+    19: [20]
+}
+
+@dataclass
+class ImageShape:
+    x: int
+    y: int
+
+    def __iter__(self):
+        yield self.x
+        yield self.y
+        
+
+def coordinates_to_image(output_shape: ImageShape, x_norm: list[int], y_norm: list[int]) -> np.ndarray:
+    blank_img = np.zeros(tuple(output_shape), np.uint8)
+    for idx_from, target in LANDMARKS_LINKS.items():
+        for idx_to in target:
+            blank_img = cv2.line(blank_img, (x_norm[idx_from], y_norm[idx_from]), (x_norm[idx_to], y_norm[idx_to]), WHITE, THICKNESS)
+    return blank_img
 
 def draw_landmarks_on_image(rgb_image, detection_result):
   hand_landmarks_list = detection_result.hand_landmarks
