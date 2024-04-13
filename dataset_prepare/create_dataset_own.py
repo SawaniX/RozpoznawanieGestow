@@ -5,7 +5,6 @@ from mediapipe.tasks.python.vision.hand_landmarker import HandLandmarkerResult
 from mediapipe.tasks.python.components.containers.landmark import NormalizedLandmark
 import cv2
 import csv
-import time
 import numpy as np
 import os
 from cv2 import VideoCapture
@@ -16,7 +15,7 @@ from utils import draw_landmarks_on_image, coordinates_to_image, ImageShape
 MODEL_PATH = '/home/tomek/VisualStudio/PaintOnline/InteractivePaint/ImageProcessing/MediaPipe/models/hand_landmarker.task'      #TODO do env
 
 fields = ['x', 'y', 'z', 'visibility', 'presence']
-path = 'dataset/moj/call'
+path = 'dataset/moj/two_up'
 filename = 'fist.csv'  
 
 class DatasetCreator:
@@ -65,6 +64,7 @@ class DatasetCreator:
             cv2.imwrite(os.path.join(path, f'{saved_num}.jpg'), sample)
             cv2.imshow('Sample', sample)
             cv2.waitKey(sleep_time)
+            print(f"Saved {saved_num}")
             saved_num += 1
             
     def _normalize_landmarks(self, landmarks: list[NormalizedLandmark]) -> list[int]:

@@ -2,3 +2,6 @@
 dataset/
 *.csv
 __pycache__
+old_trainings
+runs
+*.pth.tar
